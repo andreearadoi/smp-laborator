@@ -1,0 +1,269 @@
+include 'emu8086.inc' 
+start:  
+   call PTHIS   
+   DB 13,10, 'Alegeti forma geometrica: ', 0   
+    putc 13
+    call PTHIS
+        DB 13,10, '2. Paralelipiped', 0
+    putc 13
+    call PTHIS
+        DB 13,10, 'Optiune: ', 0
+    call scan_num
+       cmp cx,2
+    je paralelipiped
+paralelipiped: 
+    putc 13
+    call PTHIS
+        DB 13,10, 'Introduceti valoarea lungimii : ',0
+    call scan_num ;scriem valoarea dorita 
+
+    Lu dw ? 
+    mov Lu,cx     ;o luam din registru si o punem in variabila folosita
+      
+    call PTHIS
+        DB 13,10, 'Introduceti valoarea latimii : ',0
+    call scan_num ;scriem valoarea dorita
+
+    la dw ?
+    mov la,cx     ;o luam din registru si o punem in variabila folosita
+
+    call PTHIS
+        DB 13,10, 'Introduceti valoarea inaltimii: ',0  
+    call scan_num ;scriam valoarea dorita
+    
+    i dw ?   
+    mov i,cx      ;o luam din registru si o punem in variabila folosita
+
+
+    mov ax, l
+    mov dl, 2
+    div dl
+    mov ah, 0
+    mov h, ax
+
+    code1: mov ah, 0
+           mov al, 13h ; trecere in mod grafic 320x200
+           int 10h  
+
+;modul de calculare al pozitiilor de incepere a liniilor este asemanator cu cel de la cub
+;dar se tine cont ca paralelipipedul are inaltime, latime si lungime           
+; afisare latura superioara
+           mov cx, 100
+           add cx, Lu  ; coloana
+           mov dx, 100 ; rand
+           mov al, 15  ; alb
+       p1: mov ah, 0ch ; afisare pixel
+           int 10h
+           dec cx
+           cmp cx, 100
+           jae p1     
+           
+; afisare latura inferioare
+           mov cx, 100
+           add cx, Lu  ;coloana de ranceput
+           mov dx, 100 
+           add dx,i    ;randul de inceput
+           mov al, 15
+       p2: mov ah, 0ch
+           int 10h
+           dec cx      ;se decrementeaza coloana
+           cmp cx, 100
+           ja p2  
+           
+; latura din stanga
+;se pastreaza modul de calcul de la cub
+;se aduca inaltimea la valoarea randului
+;se realizeaza parcurgerea pe rand
+           mov cx, 100
+           mov dx, 100
+           add dx,i
+           mov al, 15
+       p3: mov ah, 0ch
+           int 10h
+           dec dx
+           cmp dx, 100
+           ja p3  
+           
+; latura din dreapta 
+;se pastreaza modul de calcul de la cub
+;se adula lungimea la coloana si inaltimea la rand 
+;se realizeaza parcurgerea pe rand
+           mov cx, 100
+           add cx, Lu
+           mov dx, 100
+           add dx, i
+           mov al, 15
+       p4: mov ah, 0ch
+           int 10h
+           dec dx
+           cmp dx, 100
+           ja p4
+ 
+; latura fata vazuta de sus -spate
+;la fel ca la cub dar se aduna valoarea latimii la valoarea de comparatie
+;decrementam randul
+;incrementam coloana
+           mov cx, 100
+           mov dx, 100
+           mov bx, 100
+           add bx, la
+           mov al, 15
+       p5: mov ah, 0ch
+           int 10h
+           dec dx
+           inc cx
+           cmp cx, bx
+           jl p5
+ 
+; latura fata vazuta de sus dreapta 
+          mov cx, 100
+          add cx, Lu
+          mov dx, 100 
+          mov bx, cx
+          add bx, la
+          mov al, 15
+      p6: mov ah, 0ch
+          int 10h
+          inc cx
+          dec dx
+          cmp cx, bx
+          jl p6
+
+;latura sus -fata vazuta de sus
+          mov cx ,100
+          add cx,la
+          mov dx, 100 
+          sub dx,la
+          mov bx , cx
+          add bx, Lu
+          mov al, 15
+      p7: mov ah, 0ch
+          int 10h
+          inc cx
+          cmp cx, bx
+          jl p7  
+
+;latura fata vazuta din dreapta jos
+          mov cx ,100
+          add cx, Lu
+          mov dx, 100
+          add dx, i    
+          mov bx, cx
+          add bx, la
+          mov al, 15
+      p8: mov ah, 0ch
+          int 10h
+          dec dx
+          inc cx
+          cmp cx, bx
+          jl p8
+
+;latura dreapta- fata vazuta din dreapta
+          mov cx ,100
+          add cx, la
+          add cx, Lu
+          mov dx, 100
+          sub dx, la
+          add dx,i
+          mov bx, dx
+          sub bx, i
+          mov al, 15
+      p9: mov ah, 0ch
+          int 10h
+          dec dx
+          cmp dx, bx
+          ja p9    
+
+;latura punctata simetrica latura jos fata vazuta din dreapta
+          mov cx,100
+          mov dx,100
+          add dx,i
+          mov bx,100
+          add bx,la
+          mov al,15
+      p10:mov ah,0ch
+          int 10h
+          dec dx
+          inc cx
+          dec dx
+          inc cx
+          dec dx
+          inc cx
+          dec dx
+          inc cx
+          dec dx
+          inc cx
+          cmp cx,bx 
+          jl p10
+
+;latura punctata simetrica  latura spate fata vazuta de sus
+          mov cx,100
+          add cx,la
+          mov dx,100  
+          add dx,i 
+          sub dx,la
+          mov bx,cx
+          add bx,Lu
+          mov al,15
+      p11:mov ah,0ch
+          int 10h
+          inc cx
+          inc cx
+          inc cx
+          inc cx
+          inc cx
+          cmp cx,bx
+          jl p11
+
+;latura puncata simetrica latura spate fata vazuta din dreapta
+
+          mov cx,100
+          add cx,la
+          mov dx,100  
+          add dx,i
+          sub dx,la
+          mov bx,dx
+          sub bx,i
+          mov al,15
+      p12:mov ah,0ch
+          int 10h
+          dec dx
+          dec dx
+          dec dx
+          dec dx
+          dec dx
+          cmp dx,bx
+          ja p12   
+
+;alerta   
+          ;1
+          mov ah, 02
+          mov dx, 07h
+          int 21h 
+          ;2                  
+          mov ah, 02
+          mov dx, 07h
+          int 21h
+          ;3
+          mov ah, 02
+          mov dx, 07h
+          int 21h 
+          
+          jmp final
+ 
+
+; asteptare apasare tasta  
+    final:
+           mov ah, 00
+           int 16h
+           mov ah,00h 
+           int 10h
+
+;reluare program  
+jmp start
+
+HLT
+DEFINE_SCAN_NUM
+DEFINE_PRINT_NUM
+DEFINE_PRINT_NUM_UNS
+DEFINE_PTHIS
